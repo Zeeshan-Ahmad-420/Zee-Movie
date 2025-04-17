@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="50" viewBox="0 0 200 50" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <title>ZEESHAN Movies</title>
+    <g fill="none" fill-rule="evenodd">
+        <rect width="200" height="50" rx="8" fill="#FF5722"/>
+        <g transform="translate(10, 8)">
+            <!-- Film reel icon -->
+            <circle cx="17" cy="17" r="15" fill="white"/>
+            <circle cx="17" cy="17" r="4" fill="#FF5722"/>
+            <circle cx="17" cy="7" r="3" fill="#FF5722"/>
+            <circle cx="17" cy="27" r="3" fill="#FF5722"/>
+            <circle cx="7" cy="17" r="3" fill="#FF5722"/>
+            <circle cx="27" cy="17" r="3" fill="#FF5722"/>
+        </g>
+        <!-- Text -->
+        <text x="50" y="32" font-family="Arial Black, sans-serif" font-size="20" font-weight="bold" fill="white">
+            ZEESHAN
+        </text>
+        <text x="140" y="32" font-family="Arial, sans-serif" font-size="20" font-weight="normal" fill="white">
+            Movies
+        </text>
+    </g>
+</svg>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="180" height="50" viewBox="0 0 180 50" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff0a54"/>
+      <stop offset="100%" style="stop-color:#e11d48"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <style>
+    .text { 
+      fill: url(#gradient); 
+      font-family: Arial, sans-serif; 
+      font-weight: bold;
+      filter: url(#glow);
+    }
+    @keyframes flicker {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.95; }
+    }
+    .screen { animation: flicker 3s infinite; }
+  </style>
+
+  <!-- Cinema Screen -->
+  <path class="screen" fill="url(#gradient)" d="M10,10 h40 a5,5 0 0 1 5,5 v20 a5,5 0 0 1 -5,5 h-40 a5,5 0 0 1 -5,-5 v-20 a5,5 0 0 1 5,-5 z"/>
+  
+  <!-- Film Strip -->
+  <g transform="translate(15,15)">
+    <rect fill="white" x="0" y="0" width="30" height="20" rx="2"/>
+    <rect fill="#e11d48" x="5" y="8" width="20" height="4"/>
+  </g>
+
+  <!-- Stars -->
+  <g fill="url(#gradient)">
+    <path d="M65,15 l2,4 l4,0 l-3,3 l1,4 l-4,-2 l-4,2 l1,-4 l-3,-3 l4,0 z"/>
+    <path d="M80,25 l1.5,3 l3,0 l-2.25,2.25 l0.75,3 l-3,-1.5 l-3,1.5 l0.75,-3 l-2.25,-2.25 l3,0 z"/>
+  </g>
+
+  <!-- Text -->
+  <text x="95" y="32" class="text" font-size="24">MovieHub</text>
+</svg>
