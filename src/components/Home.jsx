@@ -3,8 +3,7 @@ import { motion } from "framer-motion";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "swiper/css/navigation";
-import "swiper/css/pagination";
-import { Navigation, Pagination } from "swiper/modules";
+import { Navigation } from "swiper/modules";
 
 const API_KEY = "d53a11a77fbfcc4d08f4b388f269eff3";
 const BASE_URL = "https://api.themoviedb.org/3";
@@ -17,10 +16,10 @@ const categories = [
   { title: "Drama Movies", url: `/discover/movie?api_key=${API_KEY}&with_genres=18` },
   { title: "Bollywood Movies", url: `/discover/movie?api_key=${API_KEY}&with_origin_country=IN` },
   { title: "Hollywood Movies", url: `/discover/movie?api_key=${API_KEY}&with_origin_country=US` },
-  { title: "Lollywood Movies", url: `/discover/movie?api_key=${API_KEY}&with_origin_country=PK` }, 
-  { title: "Horror Movies", url: `/discover/movie?api_key=${API_KEY}&with_genres=27` }, 
-  { title: "Romance Movies", url: `/discover/movie?api_key=${API_KEY}&with_genres=10749` }, 
-  { title: "Documentaries", url: `/discover/movie?api_key=${API_KEY}&with_genres=99` }, 
+  { title: "Lollywood Movies", url: `/discover/movie?api_key=${API_KEY}&with_origin_country=PK` },
+  { title: "Horror Movies", url: `/discover/movie?api_key=${API_KEY}&with_genres=27` },
+  { title: "Romance Movies", url: `/discover/movie?api_key=${API_KEY}&with_genres=10749` },
+  { title: "Documentaries", url: `/discover/movie?api_key=${API_KEY}&with_genres=99` },
   { title: "Cartoon", url: `/discover/movie?api_key=${API_KEY}&with_genres=16` },
 ];
 
@@ -28,10 +27,20 @@ const Home = () => {
   const [movies, setMovies] = useState({});
   const [heroMovie, setHeroMovie] = useState(null);
   const [trailerKey, setTrailerKey] = useState(null);
+  const [activeMovieForTrailer, setActiveMovieForTrailer] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    categories.forEach(({ title, url }) => fetchMovies(url, title));
-    fetchHeroMovie();
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        await Promise.all(categories.map(({ title, url }) => fetchMovies(url, title)));
+        await fetchHeroMovie();
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
   }, []);
 
   const fetchMovies = async (url, category) => {
@@ -58,131 +67,222 @@ const Home = () => {
 
   const fetchTrailer = async (movieId) => {
     try {
+      setActiveMovieForTrailer(movieId);
       const response = await fetch(`${BASE_URL}/movie/${movieId}/videos?api_key=${API_KEY}`);
       const data = await response.json();
       const trailer = data.results.find((video) => video.type === "Trailer" && video.site === "YouTube");
       setTrailerKey(trailer ? trailer.key : null);
     } catch (error) {
       console.error("Error fetching trailer:", error);
+      setActiveMovieForTrailer(null);
     }
   };
 
+  const closeTrailer = () => {
+    setTrailerKey(null);
+    setActiveMovieForTrailer(null);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-900">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-red-600"></div>
+      </div>
+    );
+  }
+
   return (
     <motion.div
-      initial={{ y: -100, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{
-        type: "spring",
-        stiffness: 100,
-        damping: 10,
-        delay: 1,
-      }} 
-      className="px-2 sm:px-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="bg-gray-900 min-h-screen pb-16"
     >
       {heroMovie && (
-        <div className="hero w-full h-[40vh] sm:h-[50vh] md:h-[60vh] relative overflow-hidden">
+        <div className="relative w-full h-[50vh] sm:h-[70vh] lg:h-[85vh] overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/30 to-transparent z-10"></div>
           <img
-            className="w-full h-full object-cover absolute top-0 left-0"
+            className="w-full h-full object-cover object-center"
             src={`https://image.tmdb.org/t/p/original${heroMovie.backdrop_path}`}
             alt={heroMovie.title}
           />
-          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-t from-black via-black/70 to-black/20"></div>
-          <div className="absolute top-0 left-0 w-full h-full flex flex-col justify-center items-center text-center text-white px-4">
-            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold mb-2 sm:mb-4 px-2">
-              {heroMovie.title}
-            </h1>
-            <button
-              onClick={() => fetchTrailer(heroMovie.id)}
-              className="mt-4 sm:mt-8 px-4 sm:px-6 py-2 sm:py-3 bg-red-700 text-white font-semibold rounded-lg hover:bg-red-800 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl text-sm sm:text-base"
-            >
-              Watch Trailer
-            </button> 
+          <div className="absolute inset-0 flex items-center justify-center text-center z-20 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-4xl">
+              <motion.h1
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-4 sm:mb-6 leading-tight"
+              >
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-yellow-400">
+                  {heroMovie.title}
+                </span>
+              </motion.h1>
+              <motion.p
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.5 }}
+                className="text-gray-200 text-lg sm:text-xl md:text-2xl mb-8 line-clamp-3"
+              >
+                {heroMovie.overview}
+              </motion.p>
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.7 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <button
+                  onClick={() => fetchTrailer(heroMovie.id)}
+                  className="px-8 py-4 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl flex items-center gap-2 mx-auto"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                  </svg>
+                  Watch Trailer
+                </button>
+              </motion.div>
+            </div>
           </div>
         </div>
       )}
-      {categories.map(({ title }) => (
-        <MovieSection key={title} title={title} movies={movies[title]} fetchTrailer={fetchTrailer} />
-      ))}
+
+      <div className="w-full">
+        {categories.map(({ title }) => (
+          <MovieSection 
+            key={title} 
+            title={title} 
+            movies={movies[title]} 
+            fetchTrailer={fetchTrailer} 
+            activeMovieForTrailer={activeMovieForTrailer}
+          />
+        ))}
+      </div>
+
       {trailerKey && (
-        <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-2">
-          <div className="relative w-full max-w-2xl">
-            <iframe
-              className="w-full h-[200px] sm:h-[300px] md:h-[400px] lg:h-[500px]"
-              src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1`}
-              title="Movie Trailer"
-              allow="autoplay; encrypted-media"
-              allowFullScreen
-            />
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4"
+          onClick={closeTrailer}
+        >
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="relative w-full max-w-4xl bg-black rounded-xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
-              className="absolute top-2 right-2 bg-red-600 text-white p-1 sm:p-2 rounded-full text-xs sm:text-base"
-              onClick={() => setTrailerKey(null)}
+              className="absolute -top-12 right-0 bg-red-600 hover:bg-red-700 text-white p-2 rounded-full z-50 transition"
+              onClick={closeTrailer}
             >
-              ✖
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
-          </div>
-        </div>
+            <div className="aspect-w-16 aspect-h-9 w-full">
+              <iframe
+                className="w-full h-[200px] sm:h-[350px] md:h-[450px] lg:h-[550px]"
+                src={`https://www.youtube.com/embed/${trailerKey}?autoplay=1`}
+                title="Movie Trailer"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          </motion.div>
+        </motion.div>
       )}
     </motion.div>
   );
 };
 
-const MovieSection = ({ title, movies = [], fetchTrailer }) => (
-  <div className="mt-8 sm:mt-12 px-2 sm:px-4">
-    <motion.h2
-      initial={{ y: 50, opacity: 0 }}
-      whileInView={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.8 }}
-      viewport={{ once: true }}
-      className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-8 text-center text-white"
-    >
-      {title}
-    </motion.h2>
-    <Swiper
-      modules={[Navigation, Pagination]}
-      spaceBetween={10}
-      slidesPerView={1}
-      navigation
-      pagination={{ clickable: true }}
-      breakpoints={{
-        320: { slidesPerView: 1 },
-        480: { slidesPerView: 2 },
-        640: { slidesPerView: 3 },
-        768: { slidesPerView: 3 },
-        1024: { slidesPerView: 4 },
-        1280: { slidesPerView: 5 },
-      }}
-    >
-      {movies?.map((movie) => (
-        <SwiperSlide key={movie.id}>
-          <div className="relative group w-full max-w-[280px] sm:max-w-[300px] h-[360px] sm:h-[400px] rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg transition-transform transform hover:scale-105 hover:shadow-2xl mx-auto">
-            <img 
-              className="w-full h-full object-cover rounded-xl" 
-              src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`} 
-              alt={movie.title} 
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent flex flex-col justify-end p-3 sm:p-4 opacity-100 transition-opacity">
-              <h3 className="text-sm sm:text-lg font-semibold text-white mb-1 truncate">{movie.title}</h3>
-              <button 
-                className="px-3 sm:px-4 py-1 sm:py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition duration-300 w-full text-xs sm:text-sm"
-                onClick={() => fetchTrailer(movie.id)}
+const MovieSection = ({ title, movies = [], fetchTrailer, activeMovieForTrailer }) => {
+  if (!movies || movies.length === 0) return null;
+
+  return (
+    <div className="mb-16 w-full overflow-hidden">
+      <motion.div
+        initial={{ x: -50, opacity: 0 }}
+        whileInView={{ x: 0, opacity: 1 }}
+        transition={{ duration: 0.6 }}
+        viewport={{ once: true }}
+        className="px-4 sm:px-6 lg:px-8 mb-6"
+      >
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white inline-block">
+          <span className="bg-clip-text text-transparent bg-gradient-to-r from-red-500 to-yellow-400 animate-text">
+            {title}
+          </span>
+        </h2>
+      </motion.div>
+      
+      <div className="relative group w-full">
+        <Swiper
+          modules={[Navigation]}
+          spaceBetween={16}
+          slidesPerView="auto"
+          navigation={{
+            nextEl: `.next-${title.replace(/\s+/g, '-')}`,
+            prevEl: `.prev-${title.replace(/\s+/g, '-')}`,
+          }}
+          className="!overflow-visible !px-4 sm:!px-6 lg:!px-8"
+        >
+          {movies.map((movie) => (
+            <SwiperSlide key={movie.id} className="!w-[150px] sm:!w-[180px] md:!w-[200px] lg:!w-[220px]">
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                viewport={{ once: true }}
+                whileHover={{ scale: 1.05 }}
+                className="relative h-[225px] sm:h-[270px] md:h-[300px] rounded-xl overflow-hidden shadow-lg cursor-pointer bg-gray-800"
               >
-                Play Trailer
-              </button>
-            </div>
-          </div>
-        </SwiperSlide>
-      ))}
-    </Swiper>
-  </div>
-);
+                <img 
+                  className="w-full h-full object-cover transition duration-300 group-hover:brightness-75" 
+                  src={
+                    movie.poster_path 
+                      ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+                      : '/placeholder-movie.jpg'
+                  } 
+                  alt={movie.title}
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent flex flex-col justify-end p-3 opacity-0 hover:opacity-100 transition-opacity duration-300">
+                  <h3 className="text-white font-semibold text-sm sm:text-base mb-2 line-clamp-2">
+                    {movie.title}
+                  </h3>
+                  <button 
+                    className={`w-full py-2 px-3 rounded-md text-xs sm:text-sm font-medium transition ${
+                      activeMovieForTrailer === movie.id 
+                        ? "bg-red-700 text-white" 
+                        : "bg-red-600 hover:bg-red-700 text-white"
+                    }`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      fetchTrailer(movie.id);
+                    }}
+                  >
+                    {activeMovieForTrailer === movie.id ? "Loading..." : "Watch Trailer"}
+                  </button>
+                </div>
+              </motion.div>
+            </SwiperSlide>
+          ))}
+        </Swiper>
+        
+        <button className={`prev-${title.replace(/\s+/g, '-')} absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full hidden sm:flex items-center justify-center ml-2`}>
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+          </svg>
+        </button>
+        <button className={`next-${title.replace(/\s+/g, '-')} absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full hidden sm:flex items-center justify-center mr-2`}>
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+};
 
 export default Home;
-
-
-
-
-
-
-
-
-

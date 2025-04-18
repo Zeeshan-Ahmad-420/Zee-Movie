@@ -5,6 +5,8 @@ import Movie from './components/Movie';
 import Upcoming from './components/Upcoming';
 import Toprated from './components/Toprated';
 import Register from './components/Register';
+import Error from './components/Error';
+import Footer from './components/Footer';
 
 function App() {
   return (
@@ -17,7 +19,9 @@ function App() {
           <Route path="/upcoming" element={<Upcoming />} />
           <Route path="/toprated" element={<Toprated />} />
           <Route path="/register" element={<Register />} />
+          <Route path="*" element={<Error />} />
         </Routes>
+        <Footer/>
       </Router>
     </>
   );
