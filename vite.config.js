@@ -11,5 +11,12 @@ export default defineConfig({
     watch: {
       usePolling: true,
     },
+    // 👇 Important for dev server
+    historyApiFallback: true,
   },
+  // 👇 Optional if using Vite preview in production
+  preview: {
+    // Ensures fallback in preview mode
+    historyApiFallback: true,
+  }
 })
